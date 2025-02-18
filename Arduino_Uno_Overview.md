@@ -245,6 +245,3 @@ GND --> Arduino GND + Power GND
 - [Project Examples](https://www.arduino.cc/en/Tutorial/HomePage)
 
 Remember: Start simple and gradually increase complexity. Document your progress and always prioritize safety.
-
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
