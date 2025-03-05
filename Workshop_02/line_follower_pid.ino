@@ -1,74 +1,85 @@
-// Line Follower Robot with PID Control (8-Channel IR Sensor)
+// Improved Adaptive PID Line Follower with Sharp Turn Recovery and U-Turn Handling
 
-// Motor Driver Pin Definitions (L298N)
+// Motor Pins
 const int leftMotorIn1 = 4;
 const int leftMotorIn2 = 5;
 const int leftMotorEN = 6;
-
 const int rightMotorIn1 = 7;
 const int rightMotorIn2 = 8;
 const int rightMotorEN = 9;
 
-// 8-Channel IR Sensor Pin Definitions
+// 8-Channel IR Sensor Pins
 const int sensorPins[8] = {2, 3, 10, 11, 12, A0, A1, A2};
 
-// Sensor Weights - Center is 0, left is negative, right is positive
+// Sensor Weights (Center = 0, Left Negative, Right Positive)
 const int weights[8] = {-350, -250, -150, -50, 50, 150, 250, 350};
 
-// PID Control Constants (Tunable Parameters)
-float Kp = 50;    // Proportional Gain
-float Ki = 0;     // Integral Gain (often minimal for line followers)
-float Kd = 150;   // Derivative Gain (reduced from 300 for noise reduction)
-
 // PID Variables
+float Kp = 35;
+float Ki = 0;
+float Kd = 160;  // Fine-tuned for sharper handling
+
 int lastError = 0;
 float integral = 0;
+unsigned long lastUpdateTime = 0;
 
-// Speed Control Parameters
-int baseSpeed = 70;  // Default speed on straight paths
-int minSpeed = 40;   // Minimum speed during sharp turns
+// Base Speeds
+int baseSpeed = 130;  // Set for straight lines
+int minSpeed = 50;    // For tight turns
 
+// Lost Line Recovery Variables
+bool searching = false;
+unsigned long lostTime = 0;
+
+// Dead Zone
+const int DEAD_ZONE = 5;
+
+// Setup
 void setup() {
     Serial.begin(9600);
-    
-    // Configure Motor Driver Pins as Outputs
+
     pinMode(leftMotorIn1, OUTPUT);
     pinMode(leftMotorIn2, OUTPUT);
     pinMode(leftMotorEN, OUTPUT);
     pinMode(rightMotorIn1, OUTPUT);
     pinMode(rightMotorIn2, OUTPUT);
     pinMode(rightMotorEN, OUTPUT);
-    
-    // Configure Sensor Pins as Inputs
+
     for (int i = 0; i < 8; i++) {
         pinMode(sensorPins[i], INPUT);
     }
-    
+
     stopMotors();
-    delay(1000); // Allow time for sensor stabilization
+    delay(1000);
 }
 
+// Main Loop
 void loop() {
     int sensorValues[8];
     readSensors(sensorValues);
-    
+
     int error = computeError(sensorValues);
-    float correction = computePID(error);
-    
-    adjustMotorSpeeds(correction, error);
-    
-    delay(6);  // Short delay for stability
+
+    if (error == 999) {
+        handleLostLine();
+    } else {
+        autoTunePID(error);
+        float correction = computePID(error);
+        adjustMotorSpeeds(correction, error);
+        searching = false;  // Reset search mode if line is detected
+    }
+
+    delay(4);  // Small delay for stability
 }
 
-// Read sensor values (1 if detecting black line, 0 otherwise)
+// Read Sensor Values
 void readSensors(int sensorValues[]) {
     for (int i = 0; i < 8; i++) {
-        int reading = digitalRead(sensorPins[i]);
-        sensorValues[i] = (reading == LOW) ? 1 : 0;
+        sensorValues[i] = (digitalRead(sensorPins[i]) == LOW) ? 1 : 0;
     }
 }
 
-// Compute positional error based on sensor readings
+// Compute Error (returns 999 if no line detected)
 int computeError(const int sensorValues[]) {
     long weightedSum = 0;
     int activeSensors = 0;
@@ -79,44 +90,60 @@ int computeError(const int sensorValues[]) {
             activeSensors++;
         }
     }
-    
+
     if (activeSensors == 0) {
-        stopMotors();
-        integral = 0;
-        lastError = 0;
-        return 0; // No line detected - Stop or handle recovery
+        return 999;  // Lost line signal
     }
-    
-    int error = weightedSum / activeSensors;
-    
-    // Apply a deadband to filter minor fluctuations
-    if (abs(error) < 10) {
-        error = 0;
-    }
-    
-    return error;
+
+    return weightedSum / activeSensors;
 }
 
-// Compute PID correction based on error
+// PID Calculation
 float computePID(int error) {
     float P = error;
-    integral += error;
+    integral += error;  // Not used much (Ki = 0)
     float D = error - lastError;
 
     float output = Kp * P + Ki * integral + Kd * D;
 
     lastError = error;
+
     return output;
 }
 
-// Adjust motor speeds based on PID correction
+// Auto-tune Kp & Kd Based on Error
+void autoTunePID(int error) {
+    unsigned long currentTime = millis();
+    if (currentTime - lastUpdateTime > 100) {
+        lastUpdateTime = currentTime;
+
+        if (abs(error) > 300) {
+            Kp = 45;  // Sharp turn - higher aggression
+            Kd = 180; // More damping
+        } else if (abs(error) > 150) {
+            Kp = 40;  // Moderate turn
+            Kd = 160;
+        } else {
+            Kp = 35;  // Straighter section
+            Kd = 140;
+        }
+    }
+}
+
+// Adjust Motor Speeds
 void adjustMotorSpeeds(float correction, int error) {
-    // Adjust base speed dynamically based on error magnitude
-    int dynamicBaseSpeed = map(abs(error), 0, 350, baseSpeed, minSpeed);
+    int dynamicBaseSpeed = map(abs(error), 0, 350, baseSpeed, minSpeed + 20);
     dynamicBaseSpeed = constrain(dynamicBaseSpeed, minSpeed, baseSpeed);
 
-    int leftSpeed = dynamicBaseSpeed + correction;
-    int rightSpeed = dynamicBaseSpeed - correction;
+    int leftSpeed, rightSpeed;
+
+    if (abs(error) <= DEAD_ZONE) {
+        leftSpeed = baseSpeed;  // Dead zone, go straight
+        rightSpeed = baseSpeed;
+    } else {
+        leftSpeed = dynamicBaseSpeed + correction;
+        rightSpeed = dynamicBaseSpeed - correction;
+    }
 
     leftSpeed = constrain(leftSpeed, -255, 255);
     rightSpeed = constrain(rightSpeed, -255, 255);
@@ -124,20 +151,18 @@ void adjustMotorSpeeds(float correction, int error) {
     moveMotors(leftSpeed, rightSpeed);
 }
 
-// Control motor movements based on calculated speeds
+// Move Motors with Direction Handling
 void moveMotors(int leftSpeed, int rightSpeed) {
-    // Left Motor Control
     if (leftSpeed >= 0) {
         digitalWrite(leftMotorIn1, HIGH);
         digitalWrite(leftMotorIn2, LOW);
     } else {
         digitalWrite(leftMotorIn1, LOW);
         digitalWrite(leftMotorIn2, HIGH);
-        leftSpeed = -leftSpeed;  // Convert to positive for PWM
+        leftSpeed = -leftSpeed;
     }
     analogWrite(leftMotorEN, leftSpeed);
 
-    // Right Motor Control
     if (rightSpeed >= 0) {
         digitalWrite(rightMotorIn1, HIGH);
         digitalWrite(rightMotorIn2, LOW);
@@ -149,7 +174,7 @@ void moveMotors(int leftSpeed, int rightSpeed) {
     analogWrite(rightMotorEN, rightSpeed);
 }
 
-// Stop both motors
+// Stop Motors
 void stopMotors() {
     analogWrite(leftMotorEN, 0);
     analogWrite(rightMotorEN, 0);
@@ -157,4 +182,31 @@ void stopMotors() {
     digitalWrite(leftMotorIn2, LOW);
     digitalWrite(rightMotorIn1, LOW);
     digitalWrite(rightMotorIn2, LOW);
+}
+
+// Lost Line Handling (Recovery + U-Turn Handling)
+void handleLostLine() {
+    if (!searching) {
+        searching = true;
+        lostTime = millis();
+        stopMotors();
+        delay(50);  // Brief pause before recovery
+    }
+
+    unsigned long searchDuration = millis() - lostTime;
+
+    if (searchDuration < 400) {
+        if (lastError < 0) {
+            moveMotors(-70, 70);  // Gentle left spin (recover left side loss)
+        } else {
+            moveMotors(70, -70);  // Gentle right spin
+        }
+    } else {
+        // After 400ms, increase spin speed (assume U-turn needed)
+        if (lastError < 0) {
+            moveMotors(-100, 100);  // Aggressive left spin
+        } else {
+            moveMotors(100, -100);  // Aggressive right spin
+        }
+    }
 }
