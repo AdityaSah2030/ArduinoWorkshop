@@ -194,6 +194,8 @@ GND --> Arduino GND + Power GND
 - Voltage regulation considerations
 - Current limitations and requirements
 
+## Resources
+
 ### Online Simulation
 - Use [Wokwi](https://wokwi.com/) for testing
 - Create virtual circuits
@@ -201,6 +203,7 @@ GND --> Arduino GND + Power GND
 - Share simulations with others
 
 ### Useful Links
+- [Arduino Crashcourse](https://youtu.be/BLrHTHUjPuw?si=-G1NdzcwP8NKVlOq)
 - [Arduino Official Documentation](https://www.arduino.cc/reference/en/)
 - [Arduino Forum](https://forum.arduino.cc/)
 - [Project Examples](https://www.arduino.cc/en/Tutorial/HomePage)
