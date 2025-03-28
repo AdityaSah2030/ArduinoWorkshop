@@ -111,38 +111,6 @@ void loop() {
 - `delay(ms)`: Pause program execution
 - `millis()`: Get current runtime in milliseconds
 
-## Circuit Diagrams
-
-Basic connection diagrams for each component:
-
-### LED Connection
-```
-Arduino Pin --> Resistor (220Ω) --> LED(+) --> GND
-```
-
-### IR Sensor
-```
-VCC --> 5V
-GND --> GND
-OUT --> Digital Pin
-```
-
-### Ultrasonic Sensor
-```
-VCC --> 5V
-GND --> GND
-TRIG --> Digital Pin
-ECHO --> Digital Pin
-```
-
-### Motor Driver (L298N)
-```
-ENA/ENB --> PWM Pins
-IN1-IN4 --> Digital Pins
-12V --> External Power
-GND --> Arduino GND + Power GND
-```
-
 ## Safety Guidelines
 
 ### Hardware Protection
