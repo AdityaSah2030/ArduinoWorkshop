@@ -1,12 +1,11 @@
-# Arduino UNO Guide and Project Overview
+# Arduino UNO Guide and Technical Overview
 
-Welcome to the Arduino Workshop repository! This guide provides essential information about Arduino UNO and our project implementations. Whether you're a beginner or an experienced maker, this guide will help you understand the basics and get started with our projects.
+![Arduino UNO Board Diagram](arduino-uno.webp)
 
 ## Table of Contents
 - [Arduino UNO Basics](#arduino-uno-basics)
 - [Getting Started](#getting-started)
 - [Pin Layout](#pin-layout)
-- [Project Structure](#project-structure)
 - [Common Components](#common-components)
 - [Programming Essentials](#programming-essentials)
 - [Circuit Diagrams](#circuit-diagrams)
@@ -64,35 +63,6 @@ The Arduino UNO is a microcontroller board based on the ATmega328P. It's perfect
 - GND: Ground pins
 - RESET: Resets the board
 - IOREF: Reference voltage for shields
-
-## Project Structure
-
-Our repository contains several example projects:
-
-1. `LED_Blinking.ino`
-   - Basic digital output
-   - LED control fundamentals
-   - Pin configuration examples
-
-2. `IR_Sensor.ino`
-   - Infrared sensor integration
-   - Digital input handling
-   - Sensor calibration
-
-3. `IR_Sensor_with_LED.ino`
-   - Combines IR sensors with LED indicators
-   - Input/Output coordination
-   - Status visualization
-
-4. `LED_Indicator.ino`
-   - Advanced LED patterns
-   - Status indication
-   - Multiple output control
-
-5. `Ultrasonic_Distance_Sensor.ino`
-   - Distance measurement
-   - Sensor timing
-   - Environmental detection
 
 ## Common Components
 
@@ -230,18 +200,9 @@ GND --> Arduino GND + Power GND
 - Test code before hardware implementation
 - Share simulations with others
 
-## Support and Resources
-
-### Getting Help
-1. Check troubleshooting section
-2. Review example code
-3. Create an issue in this repository
-4. Use Arduino forums
-5. Reference official documentation
-
 ### Useful Links
 - [Arduino Official Documentation](https://www.arduino.cc/reference/en/)
 - [Arduino Forum](https://forum.arduino.cc/)
 - [Project Examples](https://www.arduino.cc/en/Tutorial/HomePage)
 
-Remember: Start simple and gradually increase complexity. Document your progress and always prioritize safety.
+---
