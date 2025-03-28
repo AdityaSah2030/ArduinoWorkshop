@@ -1,7 +1,5 @@
 # Arduino Line Following Robot Project
 
-![Project Workflow Diagram](path_to_workflow_image.jpg)
-
 ## Table of Contents
 - [Required Components](#required-components)
 - [Circuit Diagrams](#circuit-diagrams)
