@@ -103,6 +103,12 @@ GND --> Arduino GND + Power GND
    - Introducing ultrasonic sensor technology
    - Learning distance calculation methods
    - Understanding sensor timing and signal processing
+  
+6. **Line Follower Robot (`Basic_LFR.ino`)**
+   - First integration of IR sensors and motor driver
+   - Basic line detection and navigation logic
+   - Uses PWM signals for speed control
+   - Foundation for more advanced line follower projects
 
 ### Final Project: Line Following Robot
 The culmination of our learning, integrating all previous knowledge into a functional robotic system.
